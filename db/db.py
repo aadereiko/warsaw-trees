@@ -63,8 +63,6 @@ def create_tree_db():
 def insert_trees_from_service_into_db():
     resp = warsaw_trees.get_tree_list()['result']['records']
 
-    print(db_trees)
-
 
 def init_db():
     create_health_state_type()
