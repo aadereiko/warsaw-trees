@@ -9,24 +9,26 @@ DB_PASSWORD = '220699'
 DB_PORT = '5432'
 DB_HOST = 'localhost'
 
-# ALEX
-# handle error
-conn = psycopg2.connect(database=DB_NAME, user=DB_USER, password=DB_PASSWORD, port=DB_PORT, host=DB_HOST)
+params = {
+    "database": DB_NAME, "user": DB_USER, "password": DB_PASSWORD, "port": DB_PORT, 'host': DB_HOST
+}
 
 
 def create_health_state_type():
     sql_type = """CREATE TYPE health_state AS ENUM('good', 'medium', 'bad');"""
-
-    with conn.cursor() as db_cursor:
-        print(db_cursor.execute(sql_type))
-        print("HEALTH_STATE TYPE HAS BEEN CREATED")
+    try:
+        with psycopg2.connect(**params) as conn:
+            with conn.cursor() as db_cursor:
+                db_cursor.execute(sql_type)
+    except Exception as e:
+        print(e)
 
 
 def create_tree_db():
     tree_list = warsaw_trees.get_tree_list()
     print([(transform_service_dict(x)) for x in tree_list['result']['records'][:1]])
 
-    sql_table = """CREATE TABLE IF NOT EXISTS trees(
+    sql_table = """CREATE TABLE trees(
         id integer PRIMARY KEY,
         x real NOT NULL,
         y real NOT NULL,
@@ -49,13 +51,25 @@ def create_tree_db():
         health_state health_state
     )
     """
-    with conn.cursor() as db_cursor:
-        db_cursor.execute(sql_table)
+    try:
+        with psycopg2.connect(**params) as conn:
+            with conn.cursor() as db_cursor:
+                db_cursor.execute(sql_table)
+                conn.commit()
+    except Exception as e:
+        print(e)
+
+
+def insert_trees_from_service_into_db():
+    resp = warsaw_trees.get_tree_list()['result']['records']
+
+    print(db_trees)
 
 
 def init_db():
     create_health_state_type()
     create_tree_db()
+    insert_trees_from_service_into_db()
 
 
 init_db()
